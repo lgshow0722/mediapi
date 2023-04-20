@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: mediapi
+  datasource:
+    hikari:
+      clinic-dev:
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        jdbc-url: jdbc:mysql://211.37.179.59:3306/medi_clinic_manage?serverTimezone=UTC&characterEncoding=UTF-8
+        username: medi_clinic
+        password: "medi_clinic12#"
+        keepaliveTime: 30000
+        maximum-pool-size: 3
+        pool-name: "[DEV]CLINIC_POOL"
