@@ -2,8 +2,10 @@ package com.medi.mediapi.util;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.medi.mediapi.constant.ResultMessageCode;
 import lombok.Builder;
 import lombok.Data;
+import org.json.simple.JSONObject;
 
 import java.io.Serializable;
 
@@ -12,15 +14,19 @@ import java.io.Serializable;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class JsonResponse implements Serializable {
 
-//	private static final String DEFAULT_FAIL_MESSAGE = "시스템 오류가 발생하였습니다.\n문제가 계속될 경우 관리자에게 문의해주세요.";
-
+	// 성공여부 ( true/false )
 	@JsonProperty("success")
 	private boolean success;
 
+	// constant에 등록된 응답 유형
 	@JsonProperty("message")
-	private String message;
+	private ResultMessageCode message;
 
+	@JsonProperty("custom_message")
+	private String custom_message;
+
+	// 데이터
 	@JsonProperty("data")
-	private Object data;
+	private JSONObject data;
 
 }

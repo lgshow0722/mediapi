@@ -1,6 +1,8 @@
 spring:
   application:
     name: mediapi
+  mvc:
+    throw-exception-if-no-handler-found: true
   datasource:
     hikari:
       clinic-dev:

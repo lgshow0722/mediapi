@@ -1,5 +1,7 @@
 package com.medi.mediapi.controller;
 
+import com.medi.mediapi.constant.ResultMessageCode;
+import com.medi.mediapi.exception.ApiException;
 import com.medi.mediapi.util.JsonResponse;
 import com.medi.mediapi.util.UrlConnectionUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -56,21 +58,16 @@ public class MemberController {
                 boolean blSuccess = (boolean) jsonObjectOri.get("success");
                 String strMessage = (String) jsonObjectOri.get("message");
                 JSONObject objData = (JSONObject) jsonObjectOri.get("data");
-
-                if(blSuccess) {
-                    response.setSuccess(true);
-                    response.setData(objData);
-                } else {
-                    response.setSuccess(false);
-                    response.setMessage(strMessage);
+                if(!blSuccess) {
+                    throw new ApiException(ResultMessageCode.ETC, strMessage);
                 }
+                response.setSuccess(true);
+                response.setData(objData);
             } else {
-                response.setSuccess(false);
-                response.setMessage("데이터 없음");
+                throw new ApiException(ResultMessageCode.DATA_EMPTY);
             }
         } else {
-            response.setSuccess(false);
-            response.setMessage("데이터 없음");
+            throw new ApiException(ResultMessageCode.RESCODE);
         }
         return ResponseEntity.ok(response);
     }
