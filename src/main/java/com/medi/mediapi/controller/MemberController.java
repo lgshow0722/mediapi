@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -27,7 +28,7 @@ public class MemberController {
     private final UrlConnectionUtil urlConfig = new UrlConnectionUtil();
 
     @GetMapping("")
-    public JsonResponse index(
+    public ResponseEntity<JsonResponse> index(
             @RequestParam(value = "hash", required = true) String hash) throws IOException, ParseException {
 
         String baseDir = "/external/rest/api/member_info";
@@ -35,7 +36,7 @@ public class MemberController {
 
         HttpURLConnection urlCon = urlConfig.UrlConnection(fullUrl);
 
-        JsonResponse ret = null;
+        JsonResponse response = JsonResponse.builder().build();
 
         int responseCode = urlCon.getResponseCode();
 
@@ -57,16 +58,20 @@ public class MemberController {
                 JSONObject objData = (JSONObject) jsonObjectOri.get("data");
 
                 if(blSuccess) {
-                    ret = new JsonResponse(true).setData(objData);
+                    response.setSuccess(true);
+                    response.setData(objData);
                 } else {
-                    ret = new JsonResponse(false).setMessage(strMessage);
+                    response.setSuccess(false);
+                    response.setMessage(strMessage);
                 }
             } else {
-                ret = new JsonResponse(false).setMessage("데이터 없음");
+                response.setSuccess(false);
+                response.setMessage("데이터 없음");
             }
         } else {
-            ret = new JsonResponse(false).setMessage("통신 오류");
+            response.setSuccess(false);
+            response.setMessage("데이터 없음");
         }
-        return ret;
+        return ResponseEntity.ok(response);
     }
 }

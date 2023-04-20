@@ -1,49 +1,26 @@
 package com.medi.mediapi.util;
 
-public class JsonResponse {
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
+import lombok.Data;
 
-	private static final String DEFAULT_FAIL_MESSAGE = "시스템 오류가 발생하였습니다.\n문제가 계속될 경우 관리자에게 문의해주세요.";
-	private boolean success = false;
-	private String message = "";
-	private Object data = null;
+import java.io.Serializable;
 
-	public JsonResponse(boolean success) {
-		this.success = success;
-		this.message = getMessage();
-		this.data = data;
-	}
+@Data
+@Builder
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+public class JsonResponse implements Serializable {
 
-	public boolean isSuccess() {
-		return success;
-	}
+//	private static final String DEFAULT_FAIL_MESSAGE = "시스템 오류가 발생하였습니다.\n문제가 계속될 경우 관리자에게 문의해주세요.";
 
-	public JsonResponse setSuccess(boolean success) {
-		this.success = success;
-		return this;
-	}
+	@JsonProperty("success")
+	private boolean success;
 
-	public String getMessage() {
-		if (!this.success && "".equals(message)) {
-			this.message = DEFAULT_FAIL_MESSAGE;
-		}
-		return message;
-	}
+	@JsonProperty("message")
+	private String message;
 
-	/**
-	 * 메시지를 입력하지 않고 success가 false인경우 기본 에러메시지가 들어간다.
-	 * @param message 상태메세지
-	 */
-	public JsonResponse setMessage(String message) {
-		this.message = message;
-		return this;
-	}
+	@JsonProperty("data")
+	private Object data;
 
-	public Object getData() {
-		return data;
-	}
-
-	public JsonResponse setData(Object data) {
-		this.data = data;
-		return this;
-	}
 }
