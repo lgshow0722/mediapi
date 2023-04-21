@@ -69,6 +69,7 @@ public class MemberController {
         } else {
             throw new ApiException(ResultMessageCode.RESCODE);
         }
-        return ResponseEntity.ok(response);
+        throw new ApiException(ResultMessageCode.RESCODE);
+        //return ResponseEntity.ok(response);
     }
 }

@@ -3,6 +3,9 @@ spring:
     name: mediapi
   mvc:
     throw-exception-if-no-handler-found: true
+  web:
+    resources:
+      add-mappings: false
   datasource:
     hikari:
       clinic-dev:
