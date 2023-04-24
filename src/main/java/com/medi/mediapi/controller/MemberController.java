@@ -21,7 +21,6 @@ import java.net.HttpURLConnection;
 
 @Slf4j
 @RestController
-// @CrossOrigin(value = {"http://localhost:3000", "http://183.111.252.163"}, maxAge = 3600)
 @RequestMapping("/member")
 public class MemberController {
 
@@ -69,7 +68,6 @@ public class MemberController {
         } else {
             throw new ApiException(ResultMessageCode.RESCODE);
         }
-        throw new ApiException(ResultMessageCode.RESCODE);
-        //return ResponseEntity.ok(response);
+        return ResponseEntity.ok(response);
     }
 }

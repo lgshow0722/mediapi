@@ -27,6 +27,10 @@ public class JsonResponse implements Serializable {
 
 	// 데이터
 	@JsonProperty("data")
-	private JSONObject data;
+	private Object data;
+
+	// 데이터 갯수
+	@JsonProperty("total")
+	private int total;
 
 }

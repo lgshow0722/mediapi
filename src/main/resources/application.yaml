@@ -8,9 +8,10 @@ spring:
       add-mappings: false
   datasource:
     hikari:
+      # medi_clinic_manage
       clinic-dev:
         driver-class-name: com.mysql.cj.jdbc.Driver
-        jdbc-url: jdbc:mysql://211.37.179.59:3306/medi_clinic_manage?serverTimezone=UTC&characterEncoding=UTF-8
+        jdbc-url: jdbc:mysql://211.37.179.59:3306/?serverTimezone=UTC&characterEncoding=UTF-8
         username: medi_clinic
         password: "medi_clinic12#"
         keepaliveTime: 30000

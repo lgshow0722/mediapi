@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="com.medi.mediapi.project.clinic.repository.NoticeRepository">
+    <resultMap type="com.medi.mediapi.project.clinic.dto.Notice" id="NoticeMap">
+        <id 	property="id" column="PK_IDX"/>
+        <result property="title" column="FD_TITLE"/>
+    </resultMap>
+
+    <select id="getList" resultMap="NoticeMap">
+        SELECT /* com.medi.mediapi.project.clinic.repository::getList */
+            PK_IDX,
+            FD_TITLE
+        FROM anyprice_system_renew.tbl_board_manage
+        WHERE fd_main_view_yn = 'Y'
+        ORDER BY FD_REG_DATE DESC
+            LIMIT 5
+    </select>
+</mapper>
