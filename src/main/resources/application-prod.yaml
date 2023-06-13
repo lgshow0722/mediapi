@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: mediapi
+  mvc:
+    throw-exception-if-no-handler-found: true
+  web:
+    resources:
+      add-mappings: false
+  datasource:
+    hikari:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      jdbc-url: jdbc:mysql://121.78.113.108:3306/?serverTimezone=UTC&characterEncoding=UTF-8
+      username: hasiki
+      password: "hasiki12#"
+      keepaliveTime: 30000
+      maximum-pool-size: 50
+      pool-name: "[LIVE]STORE_POOL"

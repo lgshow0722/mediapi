@@ -34,7 +34,7 @@ dependencies {
     implementation 'com.zaxxer:HikariCP:5.0.1'
 
     // MyBatis-Spring
-    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.2'
+    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.3.0'
 }
 
 tasks.named('test') {

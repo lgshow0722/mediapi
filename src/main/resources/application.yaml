@@ -6,23 +6,12 @@ spring:
   web:
     resources:
       add-mappings: false
-  datasource:
-    hikari:
-      # dev
-      medi-dev:
-        driver-class-name: com.mysql.cj.jdbc.Driver
-        jdbc-url: jdbc:mysql://211.37.179.59:3306/?serverTimezone=UTC&characterEncoding=UTF-8
-        username: medi_clinic
-        password: "medi_clinic12#"
-        keepaliveTime: 30000
-        maximum-pool-size: 50
-        pool-name: "[DEV]STORE_POOL"
-      # live
-      medi-live:
-        driver-class-name: com.mysql.cj.jdbc.Driver
-        jdbc-url: jdbc:mysql://121.78.113.108:3306/?serverTimezone=UTC&characterEncoding=UTF-8
-        username: hasiki
-        password: "hasiki12#"
-        keepaliveTime: 30000
-        maximum-pool-size: 50
-        pool-name: "[LIVE]STORE_POOL"
+
+  # current active profiles (local, dev, prod)
+  profiles:
+    active: local
+
+#mybatis config
+mybatis:
+  config-location: classpath:mybatis-config.xml
+  mapper-locations: classpath:mapper/store/**/*.xml
