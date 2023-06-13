@@ -5,7 +5,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.SqlSessionTemplate;
-import org.mybatis.spring.annotation.MapperScan;
 import org.mybatis.spring.boot.autoconfigure.SpringBootVFS;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -18,38 +17,38 @@ import javax.sql.DataSource;
 
 /**
  * <pre>
- *     Mysql Clinic DataSource
+ *     Mysql medi DataSource
  *     Primary DataSource
- *     property : spring.datasource.hikari.clinic-dev
- *     mapper : resources/mapper/clinic
+ *     property : spring.datasource.hikari.medi-dev
+ *     mapper : resources/mapper/store
  * </pre>
  */
 
 @Configuration
-public class ClinicDevDataSourceConfig {
+public class MySQLDevDataSourceConfig {
 
     @Bean
     @Primary
-    @Qualifier("clinicDevHikariConfig")
-    @ConfigurationProperties(prefix = "spring.datasource.hikari.clinic-dev")
-    public HikariConfig clinicDevHikariConfig() {
+    @Qualifier("mediDevHikariConfig")
+    @ConfigurationProperties(prefix = "spring.datasource.hikari.medi-dev")
+    public HikariConfig mediDevHikariConfig() {
         return new HikariConfig();
     }
 
     @Bean
     @Primary
-    @Qualifier("clinicDevDataSource")
-    public DataSource clinicDevDataSource() { return new HikariDataSource(clinicDevHikariConfig()); }
+    @Qualifier("mediDevDataSource")
+    public DataSource mediDevDataSource() { return new HikariDataSource(mediDevHikariConfig()); }
 
     @Bean
     @Primary
-    @Qualifier("clinicDevSqlSessionFactory")
-    public SqlSessionFactory clinicDevSqlSessionFactory(@Qualifier("clinicDevDataSource") DataSource dataSource,
+    @Qualifier("mediDevSqlSessionFactory")
+    public SqlSessionFactory mediDevSqlSessionFactory(@Qualifier("mediDevDataSource") DataSource dataSource,
                                                         ApplicationContext applicationContext) throws Exception {
         SqlSessionFactoryBean factoryBean = new SqlSessionFactoryBean();
         factoryBean.setDataSource(dataSource);
         factoryBean.setConfigLocation(applicationContext.getResource("classpath:mybatis-config.xml"));
-        factoryBean.setMapperLocations(applicationContext.getResources("classpath:mapper/clinic/**/*.xml"));
+        factoryBean.setMapperLocations(applicationContext.getResources("classpath:mapper/store/**/*.xml"));
         factoryBean.setVfs(SpringBootVFS.class);
 
         return factoryBean.getObject();
@@ -57,9 +56,9 @@ public class ClinicDevDataSourceConfig {
 
     @Bean
     @Primary
-    @Qualifier("clinicDevSqlSessionTemplate")
-    public SqlSessionTemplate clinicDevSqlSessionTemplate(
-            @Qualifier("clinicDevSqlSessionFactory") SqlSessionFactory sqlSessionFactory) {
+    @Qualifier("mediDevSqlSessionTemplate")
+    public SqlSessionTemplate mediDevSqlSessionTemplate(
+            @Qualifier("mediDevSqlSessionFactory") SqlSessionFactory sqlSessionFactory) {
         return new SqlSessionTemplate(sqlSessionFactory);
     }
 }
