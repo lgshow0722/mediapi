@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.medi.mediapi.constant.ResultMessageCode;
 import lombok.Builder;
 import lombok.Data;
-import org.json.simple.JSONObject;
 
 import java.io.Serializable;
 

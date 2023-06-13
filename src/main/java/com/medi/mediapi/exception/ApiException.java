@@ -33,6 +33,4 @@ public class ApiException extends RuntimeException {
                 .custom_message(customMessage)
                 .build();
     }
-
-
 }
