@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.medi.mediapi.project.store.repository.RecommendRepository">
+
+    <select id="getRecommendProductCriteriaList" parameterType="Map" resultType="RecommendProductCriteria">
+        SELECT
+            tpmm.pk_idx fk_tpmm_idx,            tpmm.fd_product_name,
+            tpmm.fd_product_standard,           tpmm.fd_product_unit,
+            tpmm.fk_cate_1_idx,                 tpmm.fk_cate_2_idx,
+            IFNULL(tpomd.order_product_amount, 0) order_product_amount,
+            IFNULL(tpomd.order_product_cnt, 0) order_product_cnt,        IFNULL(tpomd.order_cnt, 0) order_cnt,
+            IFNULL(tspl.search_cnt, 0) search_cnt,                       IFNULL(tmpwm.wish_cnt, 0) wish_cnt,
+            IFNULL(tpmsbm1.cnt, 0) cart_cnt,                             IFNULL(tpmsbm2.cnt, 0) cart_use_cnt,
+        ((SELECT fd_weight_value FROM anyprice_system_renew.tbl_recommend_product_weight_manage WHERE fd_type_code = 'WTP001' AND fd_group_type_code = 'WTG001') * IFNULL(tspl.search_cnt, 0)
+        + (SELECT fd_weight_value FROM anyprice_system_renew.tbl_recommend_product_weight_manage WHERE fd_type_code = 'WTP002' AND fd_group_type_code = 'WTG001') * IFNULL(tpmsbm1.cnt, 0)
+        + (SELECT fd_weight_value FROM anyprice_system_renew.tbl_recommend_product_weight_manage WHERE fd_type_code = 'WTP003' AND fd_group_type_code = 'WTG001') * IFNULL(tpmsbm2.cnt, 0)
+        + (SELECT fd_weight_value FROM anyprice_system_renew.tbl_recommend_product_weight_manage WHERE fd_type_code = 'WTP004' AND fd_group_type_code = 'WTG001') * IFNULL(tmpwm.wish_cnt, 0)
+        + (SELECT fd_weight_value FROM anyprice_system_renew.tbl_recommend_product_weight_manage WHERE fd_type_code = 'WTP005' AND fd_group_type_code = 'WTG001') * IFNULL(tpomd.order_cnt, 0)) popular_point,
+        ((SELECT fd_weight_value FROM anyprice_system_renew.tbl_recommend_product_weight_manage WHERE fd_type_code = 'WTP001' AND fd_group_type_code = 'WTG002') * IFNULL(tspl.search_cnt, 0)
+        + (SELECT fd_weight_value FROM anyprice_system_renew.tbl_recommend_product_weight_manage WHERE fd_type_code = 'WTP002' AND fd_group_type_code = 'WTG002') * IFNULL(tpmsbm1.cnt, 0)
+        + (SELECT fd_weight_value FROM anyprice_system_renew.tbl_recommend_product_weight_manage WHERE fd_type_code = 'WTP004' AND fd_group_type_code = 'WTG002') * IFNULL(tmpwm.wish_cnt, 0)) wish_point
+
+        FROM anyprice_system_renew.tbl_product_manage_master tpmm
+            LEFT JOIN (
+                SELECT MAX(tpomd.fk_tpmm_idx) tpmm_idx, (SUM(fd_product_amount * fd_cnt)) order_product_amount, COUNT(tpomd.pk_idx) order_cnt, SUM(tpomd.fd_cnt) order_product_cnt
+                FROM anyprice_system_renew.tbl_product_order_manage_detail tpomd
+                WHERE tpomd.fd_del_yn = 'N'
+            <if test="interval_value != null and !interval_value.equals('')">
+                AND fd_reg_date <![CDATA[<=]]> NOW() AND fd_reg_date >= DATE_SUB(NOW(), INTERVAL #{interval_value} DAY)
+            </if>
+                GROUP BY tpomd.fk_tpmm_idx
+            ) tpomd ON tpmm.pk_idx = tpomd.tpmm_idx
+            LEFT JOIN (
+                SELECT fk_tpmm_idx, COUNT(pk_idx) search_cnt
+                FROM anyprice_system_renew.tbl_search_product_log
+                <if test="interval_value != null and !interval_value.equals('')">
+                    WHERE fd_reg_date <![CDATA[<=]]> NOW() AND fd_reg_date >= DATE_SUB(NOW(), INTERVAL #{interval_value} DAY)
+                </if>
+                GROUP BY fk_tpmm_idx
+            ) tspl ON tpmm.pk_idx = tspl.fk_tpmm_idx
+            LEFT JOIN (
+                SELECT fk_tpmm_idx, COUNT(pk_idx) wish_cnt
+                FROM anyprice_system_renew.tbl_member_product_wish_manage
+                WHERE fd_del_yn = 'N'
+            <if test="interval_value != null and !interval_value.equals('')">
+                AND ((fd_reg_date <![CDATA[<=]]> NOW() AND fd_reg_date >= DATE_SUB(NOW(), INTERVAL #{interval_value} DAY)) OR (fd_mod_date <![CDATA[<=]]> NOW() AND fd_mod_date >= DATE_SUB(NOW(), INTERVAL #{interval_value} DAY)))
+            </if>
+                GROUP BY fk_tpmm_idx
+            ) tmpwm ON tpmm.pk_idx = tmpwm.fk_tpmm_idx
+            LEFT JOIN (
+                SELECT fk_tpmm_idx, COUNT(fk_tpmm_idx) cnt
+                FROM anyprice_system_renew.tbl_product_member_shopping_basket_manage tpmsbm
+                WHERE fk_tmi_idx NOT IN (SELECT fk_tmi_idx FROM anyprice_system_renew.tbl_member_role WHERE fd_role_cd = 'MR0001' AND fd_del_yn = 'N')
+                AND fk_tpmm_idx IS NOT NULL
+            <if test="interval_value != null and !interval_value.equals('')">
+                AND ((fd_reg_date <![CDATA[<=]]> NOW() AND fd_reg_date <![CDATA[>=]]> DATE_SUB(NOW(), INTERVAL #{interval_value} DAY)) OR (fd_mod_date <![CDATA[<=]]> NOW() AND fd_mod_date <![CDATA[>=]]> DATE_SUB(NOW(), INTERVAL #{interval_value} DAY)))
+            </if>
+                GROUP BY fk_tpmm_idx
+            ) tpmsbm1 ON tpmsbm1.fk_tpmm_idx = tpmm.pk_idx
+            LEFT JOIN (
+                SELECT fk_tpmm_idx, COUNT(fk_tpmm_idx) cnt
+                FROM anyprice_system_renew.tbl_product_member_shopping_basket_manage tpmsbm
+                WHERE fk_tmi_idx NOT IN (SELECT fk_tmi_idx FROM anyprice_system_renew.tbl_member_role WHERE fd_role_cd = 'MR0001' AND fd_del_yn = 'N')
+                AND fk_tpmm_idx IS NOT NULL AND tpmsbm.fd_use_yn = 'Y'
+            <if test="interval_value != null and !interval_value.equals('')">
+                AND ((fd_reg_date <![CDATA[<=]]> NOW() AND fd_reg_date <![CDATA[>=]]> DATE_SUB(NOW(), INTERVAL #{interval_value} DAY)) OR (fd_mod_date <![CDATA[<=]]> NOW() AND fd_mod_date >= DATE_SUB(NOW(), INTERVAL #{interval_value} DAY)))
+            </if>
+                GROUP BY fk_tpmm_idx
+            ) tpmsbm2 ON tpmsbm2.fk_tpmm_idx = tpmm.pk_idx
+        WHERE
+            tpmm.fd_del_yn = 'N'
+        AND tpmm.fd_use_yn = 'Y'
+    </select>
+
+    <select id="getRecommendTypeProductList" parameterType="Map" resultType="RecommendProduct">
+        SELECT
+            tpmm.pk_idx fk_tpmm_idx,            tpmm.fd_product_name,
+            tpmm.fd_product_standard,           tpmm.fd_product_unit,
+            tpmm.fk_cate_1_idx,                 tpmm.fk_cate_2_idx,
+            tpsm.fd_product_amount
+        FROM anyprice_system_renew.tbl_recommend_product_manage trpm
+                 LEFT JOIN tbl_product_manage_master tpmm
+                           ON trpm.fk_tpmm_idx = tpmm.pk_idx
+                 LEFT JOIN (
+            SELECT
+                fk_tpmm_idx, MIN(fd_product_amount) fd_product_amount
+            FROM anyprice_system_renew.tbl_product_shop_manage tpsm
+            WHERE
+                    tpsm.fk_tsmi_idx IN (
+                    SELECT pk_idx
+                    FROM anyprice_system_renew.tbl_shop_manage_info
+                    WHERE fd_quick_order_yn = 'Y'
+                      AND fd_business_affiliations_state_cd = 'MA0001'
+                      AND fd_shop_state = 'MS0002'
+                )
+              AND tpsm.fd_use_yn = 'Y'
+              AND tpsm.fd_del_yn = 'N'
+              AND tpsm.fd_stock_sell_yn = 'Y'
+              AND tpsm.fd_product_amount*1 > 0
+            GROUP BY fk_tpmm_idx
+        ) tpsm ON tpmm.pk_idx = tpsm.fk_tpmm_idx
+        WHERE
+            trpm.fd_type_code = #{type_code}
+          AND trpm.fd_del_yn = 'N'
+          AND tpmm.fd_del_yn = 'N'
+          AND tpmm.fd_use_yn = 'Y'
+          AND tpmm.fd_stock_sell_yn = 'Y'
+        ORDER BY trpm.fd_rank_point DESC
+    </select>
+
+    <select id="getRecommendFrequentlyOrderProductList" parameterType="Map" resultType="RecommendProduct">
+        SELECT
+            tpmm.pk_idx fk_tpmm_idx,            tpmm.fd_product_name,
+            tpmm.fd_product_standard,           tpmm.fd_product_unit,
+            tpmm.fk_cate_1_idx,                 tpmm.fk_cate_2_idx,
+            tpsm.fd_product_amount
+        FROM anyprice_system_renew.tbl_product_manage_master tpmm
+            JOIN (
+                SELECT MAX(tpomd.fk_tpmm_idx) tpmm_idx, (SUM(fd_product_amount * fd_cnt)) order_product_amount, COUNT(tpomd.pk_idx) order_cnt, SUM(tpomd.fd_cnt) order_product_cnt
+                FROM anyprice_system_renew.tbl_product_order_manage_detail tpomd
+                WHERE tpomd.fd_del_yn = 'N'
+            <if test="interval_value != null and !interval_value.equals('')">
+                AND tpomd.fd_reg_date <![CDATA[<=]]> NOW() AND tpomd.fd_reg_date >= DATE_SUB(NOW(), INTERVAL #{interval_value} MONTH)
+            </if>
+            <if test="fk_tmi_idx != null and !fk_tmi_idx.equals('')">
+                AND tpomd.fk_tmi_idx = #{fk_tmi_idx}
+            </if>
+                GROUP BY tpomd.fk_tpmm_idx
+            ) tpomd ON tpmm.pk_idx = tpomd.tpmm_idx AND tpomd.order_cnt >= 2
+            LEFT JOIN (
+                SELECT
+                    fk_tpmm_idx, MIN(fd_product_amount) fd_product_amount
+                FROM anyprice_system_renew.tbl_product_shop_manage tpsm
+                WHERE
+                    tpsm.fk_tsmi_idx IN (
+                        SELECT pk_idx
+                        FROM anyprice_system_renew.tbl_shop_manage_info
+                        WHERE fd_quick_order_yn = 'Y'
+                        AND fd_business_affiliations_state_cd = 'MA0001'
+                        AND fd_shop_state = 'MS0002'
+                    )
+                AND tpsm.fd_use_yn = 'Y'
+                AND tpsm.fd_del_yn = 'N'
+                AND tpsm.fd_stock_sell_yn = 'Y'
+                AND tpsm.fd_product_amount*1 > 0
+                GROUP BY fk_tpmm_idx
+            ) tpsm ON tpmm.pk_idx = tpsm.fk_tpmm_idx
+        WHERE
+            tpmm.fd_del_yn = 'N'
+        AND tpmm.fd_use_yn = 'Y'
+        AND tpmm.fd_stock_sell_yn = 'Y'
+        ORDER BY order_cnt DESC
+    </select>
+
+    <select id="getRecommendBasketProductList" parameterType="Map" resultType="RecommendProduct">
+        SELECT
+            tpmm.pk_idx fk_tpmm_idx,            tpmm.fd_product_name,
+            tpmm.fd_product_standard,           tpmm.fd_product_unit,
+            tpmm.fk_cate_1_idx,                 tpmm.fk_cate_2_idx,
+            tpsm.fd_product_amount,             trpm.fd_rank_point
+        FROM anyprice_system_renew.tbl_recommend_product_manage trpm
+            LEFT JOIN anyprice_system_renew.tbl_product_manage_master tpmm
+                ON trpm.fk_tpmm_idx = tpmm.pk_idx
+        LEFT JOIN (
+            SELECT
+                fk_tpmm_idx, MIN(fd_product_amount) fd_product_amount
+            FROM anyprice_system_renew.tbl_product_shop_manage tpsm
+            WHERE
+                tpsm.fk_tsmi_idx IN (
+                SELECT pk_idx
+                FROM anyprice_system_renew.tbl_shop_manage_info
+                WHERE fd_quick_order_yn = 'Y'
+                AND fd_business_affiliations_state_cd = 'MA0001'
+                AND fd_shop_state = 'MS0002'
+            )
+            AND tpsm.fd_use_yn = 'Y'
+            AND tpsm.fd_del_yn = 'N'
+            AND tpsm.fd_stock_sell_yn = 'Y'
+            AND tpsm.fd_product_amount*1 > 0
+            GROUP BY fk_tpmm_idx
+        ) tpsm ON tpmm.pk_idx = tpsm.fk_tpmm_idx
+        WHERE
+            tpmm.pk_idx IS NOT NULL
+        AND tpmm.fk_cate_2_idx IN(
+            SELECT fk_cate_2_idx
+            FROM anyprice_system_renew.tbl_product_member_shopping_basket_manage tpmsbm
+            LEFT JOIN anyprice_system_renew.tbl_product_manage_master tpmm
+            ON tpmsbm.fk_tpmm_idx = tpmm.pk_idx
+            WHERE
+                fk_tmi_idx NOT IN (SELECT fk_tmi_idx FROM anyprice_system_renew.tbl_member_role WHERE fd_role_cd = 'MR0001' AND fd_del_yn = 'N')
+            AND fk_tpmm_idx IS NOT NULL
+            AND ((tpmsbm.fd_reg_date <![CDATA[<=]]> NOW() AND tpmsbm.fd_reg_date >= DATE_SUB(NOW(), INTERVAL #{interval_value} DAY)) OR (tpmsbm.fd_mod_date <![CDATA[<=]]> NOW() AND tpmsbm.fd_mod_date <![CDATA[>=]]> DATE_SUB(NOW(), INTERVAL #{interval_value} DAY)))
+            GROUP BY fk_cate_2_idx
+        )
+        AND tpmm.fd_del_yn = 'N'
+        AND tpmm.fd_use_yn = 'Y'
+        AND tpmm.fd_stock_sell_yn = 'Y'
+        AND trpm.fd_del_yn = 'N'
+        AND trpm.fd_type_code = 'RT9999'
+        ORDER BY trpm.fd_rank_point DESC
+    </select>
+
+    <select id="getRecommendWishProductList" parameterType="Map" resultType="RecommendProduct">
+        SELECT
+            tpmm.pk_idx fk_tpmm_idx,            tpmm.fd_product_name,
+            tpmm.fd_product_standard,           tpmm.fd_product_unit,
+            tpmm.fk_cate_1_idx,                 tpmm.fk_cate_2_idx,
+            tpsm.fd_product_amount,             trpm.fd_rank_point
+        FROM anyprice_system_renew.tbl_recommend_product_manage trpm
+                 LEFT JOIN anyprice_system_renew.tbl_product_manage_master tpmm
+                           ON trpm.fk_tpmm_idx = tpmm.pk_idx
+                 LEFT JOIN (
+            SELECT
+                fk_tpmm_idx, MIN(fd_product_amount) fd_product_amount
+            FROM anyprice_system_renew.tbl_product_shop_manage tpsm
+            WHERE
+                    tpsm.fk_tsmi_idx IN (
+                    SELECT pk_idx
+                    FROM anyprice_system_renew.tbl_shop_manage_info
+                    WHERE fd_quick_order_yn = 'Y'
+                      AND fd_business_affiliations_state_cd = 'MA0001'
+                      AND fd_shop_state = 'MS0002'
+                )
+              AND tpsm.fd_use_yn = 'Y'
+              AND tpsm.fd_del_yn = 'N'
+              AND tpsm.fd_stock_sell_yn = 'Y'
+              AND tpsm.fd_product_amount*1 > 0
+            GROUP BY fk_tpmm_idx
+        ) tpsm ON tpmm.pk_idx = tpsm.fk_tpmm_idx
+        WHERE
+            tpmm.pk_idx IS NOT NULL
+        AND tpmm.fk_cate_2_idx IN(
+            SELECT fk_cate_2_idx
+            FROM anyprice_system_renew.tbl_member_product_wish_manage tmpwm
+                LEFT JOIN anyprice_system_renew.tbl_product_manage_master tpmm
+                    ON tmpwm.fk_tpmm_idx = tpmm.pk_idx
+            WHERE
+                tmpwm.fk_tmi_idx NOT IN (SELECT fk_tmi_idx FROM anyprice_system_renew.tbl_member_role WHERE fd_role_cd = 'MR0001' AND fd_del_yn = 'N')
+            AND tmpwm.fk_tpmm_idx IS NOT NULL
+            AND tmpwm.fd_del_yn = 'N'
+            AND ((tmpwm.fd_reg_date <![CDATA[<=]]> NOW() AND tmpwm.fd_reg_date >= DATE_SUB(NOW(), INTERVAL #{interval_value} DAY)) OR (tmpwm.fd_mod_date <![CDATA[<=]]> NOW() AND tmpwm.fd_mod_date <![CDATA[>=]]> DATE_SUB(NOW(), INTERVAL #{interval_value} DAY)))
+            GROUP BY fk_cate_2_idx
+        )
+        AND tpmm.fd_del_yn = 'N'
+        AND tpmm.fd_use_yn = 'Y'
+        AND tpmm.fd_stock_sell_yn = 'Y'
+        AND trpm.fd_del_yn = 'N'
+        AND trpm.fd_type_code = 'RT9999'
+        ORDER BY trpm.fd_rank_point DESC
+    </select>
+
+    <insert id="insertRecommendProductList" parameterType="Map">
+        INSERT INTO anyprice_system_renew.tbl_recommend_product_manage
+            (fk_tpmm_idx, fd_type_code, fd_rank_point, fd_del_yn, fd_reg_id, fd_reg_date)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+                #{item.fk_tpmm_idx}, #{item.fd_type_code}, #{item.fd_rank_point}, #{item.fd_del_yn}, 'system', NOW()
+            )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+            fd_rank_point = VALUES(fd_rank_point),
+            fd_del_yn = VALUES(fd_del_yn),
+            fd_mod_id = 'system'
+    </insert>
+
+<!--    <select id="">-->
+<!--        SELECT tpmm.pk_idx, tpmm.fd_product_name, tpsm.fd_product_amount-->
+<!--        FROM tbl_product_manage_master tpmm-->
+<!--            LEFT JOIN (-->
+<!--                SELECT-->
+<!--                    pk_idx, fk_tpmm_idx, fd_product_amount-->
+<!--                FROM tbl_product_shop_manage tpsm-->
+<!--                WHERE-->
+<!--                        tpsm.fk_tsmi_idx IN (-->
+<!--                        SELECT pk_idx-->
+<!--                        FROM tbl_shop_manage_info-->
+<!--                        WHERE fd_quick_order_yn = 'Y'-->
+<!--                          AND fd_business_affiliations_state_cd = 'MA0001'-->
+<!--                          AND fd_shop_state = 'MS0002'-->
+<!--                    )-->
+<!--                  AND tpsm.fd_use_yn = 'Y'-->
+<!--                  AND tpsm.fd_del_yn = 'N'-->
+<!--                  AND tpsm.fd_stock_sell_yn = 'Y'-->
+<!--                  AND tpsm.fd_product_amount*1 > 0-->
+<!--            ) tpsm ON tpmm.pk_idx = tpsm.fk_tpmm_idx-->
+<!--        WHERE-->
+<!--            tpmm.pk_idx = #{fk_tpmm_idx}-->
+<!--        AND tpmm.fd_del_yn = 'N'-->
+<!--        AND tpmm.fd_stock_sell_yn = 'Y'-->
+<!--        AND tpmm.fd_use_yn = 'Y'-->
+<!--        ORDER BY tpsm.fd_product_amount-->
+<!--        LIMIT 1-->
+<!--    </select>-->
+</mapper>
